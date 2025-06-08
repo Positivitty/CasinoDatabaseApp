@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from models import MachineStatus
 
@@ -20,10 +20,10 @@ class User(UserBase):
 
 class MachineBase(BaseModel):
     machine_number: str
-    serial_number: str
-    vendor: str
-    vendor_contacted: bool = False
-    notes: Optional[str] = None
+    location: str
+    machine_type: str
+    is_out_of_service: bool = False
+    current_issue: Optional[str] = None
 
 class MachineCreate(MachineBase):
     pass
@@ -37,11 +37,39 @@ class MachineUpdate(BaseModel):
 
 class Machine(MachineBase):
     id: int
-    date_down: datetime
-    status: MachineStatus
+    last_maintenance: datetime
+
+    class Config:
+        from_attributes = True
+
+class TechnicianBase(BaseModel):
+    name: str
+    employee_id: str
+    contact_number: str
+
+class TechnicianCreate(TechnicianBase):
+    pass
+
+class Technician(TechnicianBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+class MaintenanceRecordBase(BaseModel):
+    machine_id: int
     technician_id: int
-    created_at: datetime
-    updated_at: datetime
+    issue_description: str
+    repair_description: Optional[str] = None
+    is_resolved: bool = False
+
+class MaintenanceRecordCreate(MaintenanceRecordBase):
+    pass
+
+class MaintenanceRecord(MaintenanceRecordBase):
+    id: int
+    reported_time: datetime
+    resolved_time: Optional[datetime] = None
 
     class Config:
         from_attributes = True 

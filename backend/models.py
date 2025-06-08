@@ -1,5 +1,6 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql import func
 from database import Base
 import enum
 from datetime import datetime
@@ -25,14 +26,33 @@ class Machine(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     machine_number = Column(String, unique=True, index=True)
-    serial_number = Column(String, unique=True)
-    vendor = Column(String)
-    date_down = Column(DateTime, default=datetime.utcnow)
-    vendor_contacted = Column(Boolean, default=False)
-    technician_id = Column(Integer, ForeignKey("users.id"))
-    status = Column(Enum(MachineStatus), default=MachineStatus.DOWN)
-    notes = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    location = Column(String)
+    machine_type = Column(String)  # e.g., "Slot Machine", "Video Poker", etc.
+    is_out_of_service = Column(Boolean, default=False)
+    current_issue = Column(Text, nullable=True)
+    last_maintenance = Column(DateTime(timezone=True), server_default=func.now())
+    maintenance_records = relationship("MaintenanceRecord", back_populates="machine")
 
-    technician = relationship("User", back_populates="machines") 
+class Technician(Base):
+    __tablename__ = "technicians"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String)
+    employee_id = Column(String, unique=True, index=True)
+    contact_number = Column(String)
+    maintenance_records = relationship("MaintenanceRecord", back_populates="technician")
+
+class MaintenanceRecord(Base):
+    __tablename__ = "maintenance_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    machine_id = Column(Integer, ForeignKey("machines.id"))
+    technician_id = Column(Integer, ForeignKey("technicians.id"))
+    issue_description = Column(Text)
+    repair_description = Column(Text, nullable=True)
+    reported_time = Column(DateTime(timezone=True), server_default=func.now())
+    resolved_time = Column(DateTime(timezone=True), nullable=True)
+    is_resolved = Column(Boolean, default=False)
+    
+    machine = relationship("Machine", back_populates="maintenance_records")
+    technician = relationship("Technician", back_populates="maintenance_records") 
