@@ -14,18 +14,22 @@ class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    email = Column(String, unique=True, index=True)
     username = Column(String, unique=True, index=True)
+    email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
-    machines = relationship("Machine", back_populates="technician")
 
 class Machine(Base):
     __tablename__ = "machines"
 
     id = Column(Integer, primary_key=True, index=True)
     machine_number = Column(String, unique=True, index=True)
+    serial_number = Column(String, unique=True)
+    vendor = Column(String)
+    notes = Column(Text, nullable=True)
+    status = Column(Enum(MachineStatus), default=MachineStatus.DOWN)
+    date_down = Column(DateTime(timezone=True), default=datetime.now)
     location = Column(String)
     machine_type = Column(String)  # e.g., "Slot Machine", "Video Poker", etc.
     is_out_of_service = Column(Boolean, default=False)

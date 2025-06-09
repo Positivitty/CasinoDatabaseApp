@@ -1,102 +1,102 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
+import React, { FormEvent, ChangeEvent } from 'react';
 import { MachineFormData } from '../types';
 
 interface MachineFormProps {
-  onSubmit: (data: MachineFormData) => void;
-  isLoading: boolean;
+    onSubmit: (data: MachineFormData) => void;
+    isLoading: boolean;
 }
 
 export const MachineForm: React.FC<MachineFormProps> = ({ onSubmit, isLoading }) => {
-  const { register, handleSubmit, formState: { errors }, reset } = useForm<MachineFormData>();
+    const [formData, setFormData] = React.useState<MachineFormData>({
+        machine_number: '',
+        serial_number: '',
+        vendor: '',
+        notes: ''
+    });
 
-  const onSubmitForm = (data: MachineFormData) => {
-    onSubmit(data);
-    reset();
-  };
+    const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        onSubmit(formData);
+    };
 
-  return (
-    <div className="card max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">Add New Machine</h2>
-      <form onSubmit={handleSubmit(onSubmitForm)} className="space-y-6">
-        <div>
-          <label htmlFor="machine_number" className="form-label">
-            Machine Number
-          </label>
-          <input
-            type="text"
-            id="machine_number"
-            {...register('machine_number', { required: 'Machine number is required' })}
-            className="form-input"
-          />
-          {errors.machine_number && (
-            <p className="mt-1 text-sm text-red-600">{errors.machine_number.message}</p>
-          )}
-        </div>
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev: MachineFormData) => ({
+            ...prev,
+            [name]: value
+        }));
+    };
 
-        <div>
-          <label htmlFor="serial_number" className="form-label">
-            Serial Number
-          </label>
-          <input
-            type="text"
-            id="serial_number"
-            {...register('serial_number', { required: 'Serial number is required' })}
-            className="form-input"
-          />
-          {errors.serial_number && (
-            <p className="mt-1 text-sm text-red-600">{errors.serial_number.message}</p>
-          )}
-        </div>
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+                <label htmlFor="machine_number" className="block text-sm font-medium text-gray-700">
+                    Machine Number
+                </label>
+                <input
+                    type="text"
+                    name="machine_number"
+                    id="machine_number"
+                    required
+                    value={formData.machine_number}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+            </div>
 
-        <div>
-          <label htmlFor="vendor" className="form-label">
-            Vendor
-          </label>
-          <input
-            type="text"
-            id="vendor"
-            {...register('vendor', { required: 'Vendor is required' })}
-            className="form-input"
-          />
-          {errors.vendor && (
-            <p className="mt-1 text-sm text-red-600">{errors.vendor.message}</p>
-          )}
-        </div>
+            <div>
+                <label htmlFor="serial_number" className="block text-sm font-medium text-gray-700">
+                    Serial Number
+                </label>
+                <input
+                    type="text"
+                    name="serial_number"
+                    id="serial_number"
+                    required
+                    value={formData.serial_number}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+            </div>
 
-        <div>
-          <label className="inline-flex items-center">
-            <input
-              type="checkbox"
-              {...register('vendor_contacted')}
-              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-            />
-            <span className="ml-2">Vendor Contacted</span>
-          </label>
-        </div>
+            <div>
+                <label htmlFor="vendor" className="block text-sm font-medium text-gray-700">
+                    Vendor
+                </label>
+                <input
+                    type="text"
+                    name="vendor"
+                    id="vendor"
+                    required
+                    value={formData.vendor}
+                    onChange={handleChange}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+            </div>
 
-        <div>
-          <label htmlFor="notes" className="form-label">
-            Notes
-          </label>
-          <textarea
-            id="notes"
-            {...register('notes')}
-            className="form-input"
-            rows={3}
-          />
-        </div>
+            <div>
+                <label htmlFor="notes" className="block text-sm font-medium text-gray-700">
+                    Notes
+                </label>
+                <textarea
+                    name="notes"
+                    id="notes"
+                    value={formData.notes}
+                    onChange={handleChange}
+                    rows={3}
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+            </div>
 
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="btn-primary"
-          >
-            {isLoading ? 'Adding...' : 'Add Machine'}
-          </button>
-        </div>
-      </form>
-    </div>
-  );
+            <div className="flex justify-end">
+                <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50"
+                >
+                    {isLoading ? 'Adding...' : 'Add Machine'}
+                </button>
+            </div>
+        </form>
+    );
 }; 

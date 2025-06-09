@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider, useQuery, useMutation } from 'react-query';
 import { LoginForm } from './components/LoginForm';
+import { CreateAccountForm } from './components/CreateAccountForm';
 import { MachineList } from './components/MachineList';
 import { MachineForm } from './components/MachineForm';
-import { login, getMachines, addMachine, updateMachine } from './api/client';
-import { LoginCredentials, MachineFormData, MachineStatus } from './types';
+import { login, getMachines, addMachine, updateMachine, createAccount } from './api/client';
+import { LoginCredentials, MachineFormData, MachineStatus, CreateAccountData } from './types';
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ function App() {
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem('token'));
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showCreateAccount, setShowCreateAccount] = useState(false);
 
   const { data: machines = [], isLoading: machinesLoading } = useQuery(
     'machines',
@@ -32,6 +34,14 @@ function AppContent() {
     onSuccess: (data) => {
       localStorage.setItem('token', data.access_token);
       setIsAuthenticated(true);
+    },
+  });
+
+  const createAccountMutation = useMutation(createAccount, {
+    onSuccess: (data) => {
+      localStorage.setItem('token', data.access_token!);
+      setIsAuthenticated(true);
+      setShowCreateAccount(false);
     },
   });
 
@@ -53,11 +63,37 @@ function AppContent() {
   );
 
   if (!isAuthenticated) {
+    if (showCreateAccount) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-md w-full">
+            <CreateAccountForm
+              onSubmit={(data: CreateAccountData) => createAccountMutation.mutate(data)}
+              onCancel={() => setShowCreateAccount(false)}
+              isLoading={createAccountMutation.isLoading}
+            />
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <LoginForm
-        onSubmit={(data: LoginCredentials) => loginMutation.mutate(data)}
-        isLoading={loginMutation.isLoading}
-      />
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md w-full">
+          <LoginForm
+            onSubmit={(data: LoginCredentials) => loginMutation.mutate(data)}
+            isLoading={loginMutation.isLoading}
+          />
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => setShowCreateAccount(true)}
+              className="text-indigo-600 hover:text-indigo-500"
+            >
+              Create a new account
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 

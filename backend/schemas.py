@@ -1,46 +1,72 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 from models import MachineStatus
 
 class UserBase(BaseModel):
-    email: EmailStr
     username: str
+    email: EmailStr
+    model_config = ConfigDict(from_attributes=True)
 
 class UserCreate(UserBase):
     password: str
 
+    @classmethod
+    def validate_password(cls, v):
+        if len(v) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        if not any(c.isupper() for c in v):
+            raise ValueError('Password must contain at least one uppercase letter')
+        if not any(c.islower() for c in v):
+            raise ValueError('Password must contain at least one lowercase letter')
+        if not any(c.isdigit() for c in v):
+            raise ValueError('Password must contain at least one number')
+        return v
+
 class User(UserBase):
     id: int
     is_active: bool
+    is_admin: bool = False
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    email: EmailStr
+    is_active: bool
     is_admin: bool
+    access_token: Optional[str] = None
+    token_type: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
 
-    class Config:
-        from_attributes = True
+class Token(BaseModel):
+    access_token: str
+    token_type: str
 
+class TokenData(BaseModel):
+    username: Optional[str] = None
+
+# Machine Schemas
 class MachineBase(BaseModel):
     machine_number: str
-    location: str
-    machine_type: str
-    is_out_of_service: bool = False
-    current_issue: Optional[str] = None
+    serial_number: str
+    vendor: str
+    notes: Optional[str] = None
+    model_config = ConfigDict(from_attributes=True)
 
 class MachineCreate(MachineBase):
-    pass
+    status: MachineStatus = MachineStatus.DOWN
+    date_down: datetime = datetime.now()
 
 class MachineUpdate(BaseModel):
-    serial_number: Optional[str] = None
-    vendor: Optional[str] = None
-    vendor_contacted: Optional[bool] = None
     status: Optional[MachineStatus] = None
     notes: Optional[str] = None
+    date_down: Optional[datetime] = None
+    model_config = ConfigDict(from_attributes=True)
 
 class Machine(MachineBase):
     id: int
-    last_maintenance: datetime
-
-    class Config:
-        from_attributes = True
+    status: MachineStatus
+    date_down: datetime
 
 class TechnicianBase(BaseModel):
     name: str
